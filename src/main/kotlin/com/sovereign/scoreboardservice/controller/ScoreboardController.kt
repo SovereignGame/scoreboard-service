@@ -1,40 +1,33 @@
 package com.sovereign.scoreboardservice.controller
 
+import com.sovereign.scoreboardservice.model.Score
+import com.sovereign.scoreboardservice.service.ScoreService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/scoreboard-service")
-class ScoreboardController() {
+class ScoreboardController(private val scoreService: ScoreService) {
 
-    //TODO Add this method
-    @GetMapping("top")
-    fun getTopPlayers(){
-        /*
-        Respons: De ti spillerne som har høyest poengskår.
-        [{ username: “username1”, score: # }, … ]
-         */
+    @GetMapping("/top")
+    fun getTopPlayers(): List<Score?>? {
+
+        return scoreService.getTop10()
     }
 
-    //TODO Add this method
     @GetMapping("/peers")
-    fun getPeersForPlayerByUsername(@RequestHeader("Username") username: String){
-
-        /*
-        Respons: De fem bedre og de fire dårligere spillerne enn username.
-        [{ username: “username1”, score: # }, … ]
-         */
+    fun getPeersForPlayerByUsername(@RequestHeader("Username") username: String):MutableMap<String,Int>{
+        return scoreService.getPeersForPlayerByUsername(username)
     }
 
-    //TODO Add this method
     @PutMapping("/upadete")
-    fun updatePlayerByUsername(@RequestHeader("Username") username: String){
-
-        /*
-        Intern funksjonalitet. GameInstanceService sender oppdateringer til LeaderboardService når en spillers poengsum endrer seg.
-        LeaderboardService skriver dette til LeaderboardDB. Hvis username ikke er registrert oppføres en ny entry i databasen.
-        Put: { score: # }
-        Respons: ?
-         */
+    fun updatePlayerByUsername(@RequestHeader("Username") username: String, @RequestParam total: Int): ResponseEntity<Boolean> {
+        if(scoreService.updateScore(username, total)){
+            return ResponseEntity(true,HttpStatus.OK)
+        }
+        return ResponseEntity(false, HttpStatus.CONFLICT)
     }
 
 }
